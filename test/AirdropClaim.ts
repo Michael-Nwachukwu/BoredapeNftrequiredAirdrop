@@ -142,78 +142,8 @@ describe("MerkleAirdrop", function () {
             expect(await token.balanceOf(claimingAddress)).to.equal(claimAmount);
         });
 
-        // // This test does not allow an allowed user to claim twice.
-        // it("Should not allow the same address to claim twice", async function () {
-        //     const { deployedAirdropContract, addr1, merkleTree } = await loadFixture(deployContract);
-
-        //     const claimingAddress = addr1.address;
-        //     const claimAmount = ethers.parseEther("100");
-
-        //     const leaf = [claimingAddress, claimAmount];
-        //     const proof = merkleTree.getProof(leaf);
-
-        //     // 1st claim here
-        //     await deployedAirdropContract.connect(addr1).claim(claimAmount, proof);
-
-        //     // second claim here
-        //     await expect(deployedAirdropContract.connect(addr1).claim(claimAmount, proof)).to.be.revertedWith("Airdrop already claimed");
-        // });
-
-        // // This test does not ineligible addresses to claim airdrops
-        // it("Should not allow ineligible addresses to claim", async function () {
-        //     const { deployedAirdropContract, addr1, addr2, merkleTree } = await loadFixture(deployContract);
-
-        //     const ineligibleAddress = addr1.address;
-        //     const claimAmount = ethers.parseEther("100");
-
-        //     const leaf = [ineligibleAddress, claimAmount];
-        //     const proof = merkleTree.getProof(leaf);
-
-        //     // pass in wrong address to the wrong proof
-        //     await expect(deployedAirdropContract.connect(addr2).claim(claimAmount, proof)).to.be.revertedWith("Invalid proof");
-        // });
+        
     });
 
-    // describe("Owner Functions", function () {
-    //     it("Should allow the owner to update the Merkle root", async function () {
-    //         const { deployedAirdropContract, owner} = await loadFixture(deployContract);
-
-    //         // create a new hex hash to pass to the contract 
-    //         const newMerkleRoot = ethers.hexlify(keccak256("new root"));
-
-    //         // call the update function 
-    //         await deployedAirdropContract.connect(owner).updateMerkleRoot(newMerkleRoot);
-    //         // check that the current contract merkle root equals the newmerkleRoot
-    //         expect(await deployedAirdropContract.merkleRoot()).to.equal(newMerkleRoot);
-    //     });
-
-    //     // This test allows the contract owner to withdraw 
-    //     it("Should allow the owner to withdraw remaining tokens", async function () {
-    //         const { deployedAirdropContract, owner, token } = await loadFixture(deployContract);
-        
-    //         // check owners inital balance
-    //         const ownerInitialBalance = await token.balanceOf(owner.address);
-
-    //         // get address for deployed contract 
-    //         const contractAddress = await deployedAirdropContract.getAddress();
-
-    //         // Get contract's initial balance
-    //         const contractInitialBalance = await token.balanceOf(contractAddress);
-
-    //         const withdrawalAmount = ethers.parseUnits("100")
-        
-    //         // Perform the withdrawal
-    //         await deployedAirdropContract.connect(owner).withdrawTokens(withdrawalAmount);
-        
-    //         // Check the balances after withdrawal
-    //         const ownerFinalBalance = await token.balanceOf(owner.address);
-    //         const contractFinalBalance = await token.balanceOf(contractAddress);
-        
-    //         // The owner's balance should increase by the amount that was in the contract
-    //         expect(ownerFinalBalance).to.equal(ownerInitialBalance + withdrawalAmount);
-        
-    //         // The contract's balance should now be zero
-    //         expect(contractFinalBalance).to.equal(contractInitialBalance - withdrawalAmount);
-    //     });
-    // });
+    
 });
