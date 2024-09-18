@@ -46,6 +46,7 @@ fs.createReadStream(feedFile)
         // Write all proofs to a JSON file
         fs.writeFileSync("feed-files/proofs.json", JSON.stringify(proofs, null, 2));
         console.log("All proofs have been saved to 'proofs.json'.");
+        return;
 
       }
     } catch (err) {
@@ -55,6 +56,24 @@ fs.createReadStream(feedFile)
   .on("error", (err: Error) => {
     console.error(`Error reading ${feedFile}:`, err);
   });
+
+
+export const getAirdropList = async (): Promise<[string, number][]> => {
+  return new Promise((resolve, reject) => {
+    const values: [string, number][] = [];
+    fs.createReadStream(feedFile)
+      .pipe(csv())
+      .on("data", (row: AirdropEntry) => {
+        values.push([row.user_address, Number(row.amount)]);
+      })
+      .on("end", () => {
+        resolve(values);
+      })
+      .on("error", (err: Error) => {
+        reject(err);
+      });
+  });
+};
 
 
 
