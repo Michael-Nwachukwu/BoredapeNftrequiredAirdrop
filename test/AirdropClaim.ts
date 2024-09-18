@@ -22,38 +22,6 @@ describe("MerkleAirdrop", function () {
         return { token };
     }
 
-    // Function to deploy the Airdrop contract
-    // async function deployContractI() {
-
-    //     // Get users to populate airdropList
-    //     const [owner, addr1, addr2, addr3, addr4] = await ethers.getSigners();
-
-    //     const airdropList = [
-    //         [ addr1.address, ethers.parseEther("100") ],
-    //         [ addr2.address, ethers.parseEther("200") ],
-    //         [ addr3.address, ethers.parseEther("300") ],
-    //     ];
-
-    //     // Compute merkle tree for airdrop list
-    //     const merkleTree = StandardMerkleTree.of(airdropList, ["address", "uint256"]);
-    //     // get the the root hash of our merkletree
-    //     const root = merkleTree.root;
-
-    //     // Grab token from earlier deployment function 
-    //     const { token } = await loadFixture(deployToken);
-
-    //     // Grab desired contract to be deployed
-    //     const airdropContract = await hre.ethers.getContractFactory("MerkleAirdrop");
-
-    //     // Deploy contract
-    //     const deployedAirdropContract = await airdropContract.deploy(token, root);
-
-    //     await token.transfer(deployedAirdropContract, ethers.parseEther("1000"));
-
-    //     return { deployedAirdropContract, token, owner, addr1, addr2, addr3, merkleTree };
-
-    // }
-
 
     // Function to deploy the Airdrop contract
     async function deployContract() {
@@ -63,19 +31,23 @@ describe("MerkleAirdrop", function () {
         const addr1 = "0x440Bcc7a1CF465EAFaBaE301D1D7739cbFe09dDA";
         const addr2 = "0x98E711f31E49C2e50C1A290b6F2b1e493E43EA76";
         const addr3 = "0x08c1AE7E46D4A13b766566033b5C47c735e19F6f";
+        const addr4 = "0x5B38Da6a701c568545dCfcB03FcB875f56beddC4";
 
         // Impersonate the holder address
-        await helpers.impersonateAccount(addr1, addr2, addr3);
+        await helpers.impersonateAccount(addr1, addr2, addr3, addr4);
+        await helpers.impersonateAccount(addr4);
 
         // Set balance for each impersonated account
         await setBalance(addr1, ethers.parseEther("10"));
         await setBalance(addr2, ethers.parseEther("10"));
         await setBalance(addr3, ethers.parseEther("10"));
+        await setBalance(addr4, ethers.parseEther("10"));
 
         // Make holder a signer to be able to sign transactions
         const impersonatedSigner1 = await ethers.getSigner(addr1);
         const impersonatedSigner2 = await ethers.getSigner(addr2);
         const impersonatedSigner3 = await ethers.getSigner(addr3);
+        const signerWithoutNft = await ethers.getSigner(addr4);
 
 
         // Get airdrop list from CSV
@@ -103,7 +75,7 @@ describe("MerkleAirdrop", function () {
 
         await token.transfer(deployedAirdropContract, ethers.parseEther("10000"));
 
-        return { deployedAirdropContract, token, impersonatedSigner1, impersonatedSigner2, impersonatedSigner3, merkleTree, airdropList };
+        return { deployedAirdropContract, token, impersonatedSigner1, impersonatedSigner2, impersonatedSigner3, signerWithoutNft, merkleTree, airdropList };
     }
 
     describe("Deployment", function () {
@@ -142,8 +114,36 @@ describe("MerkleAirdrop", function () {
             expect(await token.balanceOf(claimingAddress)).to.equal(claimAmount);
         });
 
-        
+        // This test does not allow an allowed user to claim twice.
+        it("Should not allow the same address to claim twice", async function () {
+            const { deployedAirdropContract, merkleTree, impersonatedSigner1 } = await loadFixture(deployContract);
+
+            const claimingAddress = impersonatedSigner1.address;
+            const claimAmount = ethers.parseEther("500");
+
+            const leaf = [claimingAddress, claimAmount];
+            const proof = merkleTree.getProof(leaf);
+
+            // 1st claim here
+            await deployedAirdropContract.connect(impersonatedSigner1).claim(claimAmount, proof);
+
+            // second claim here
+            await expect(deployedAirdropContract.connect(impersonatedSigner1).claim(claimAmount, proof)).to.be.revertedWith("Airdrop already claimed");
+        });
+
+        it("Should not allow account without nft to claim", async function () {
+            const { deployedAirdropContract, merkleTree, signerWithoutNft } = await loadFixture(deployContract);
+
+            const ineligibleAddress = signerWithoutNft.address;
+            const claimAmount = ethers.parseEther("300");
+
+            const leaf = [ineligibleAddress, claimAmount];
+            const proof = merkleTree.getProof(leaf);
+
+            // pass in wrong address to the wrong proof
+            await expect(deployedAirdropContract.connect(signerWithoutNft).claim(claimAmount, proof)).to.be.revertedWith("Must own a BAYC NFT to claim");
+        });
+
     });
 
-    
 });

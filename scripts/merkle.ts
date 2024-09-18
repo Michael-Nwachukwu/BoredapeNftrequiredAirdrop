@@ -45,10 +45,8 @@ fs.createReadStream(feedFile)
 
         // Write all proofs to a JSON file
         fs.writeFileSync("feed-files/proofs.json", JSON.stringify(proofs, null, 2));
-        console.log("All proofs have been saved to 'proofs.json'.");
-        return;
-
       }
+      console.log("All proofs have been saved to 'proofs.json'.");
     } catch (err) {
       console.error("Error reading or processing 'tree.json':", err);
     }
